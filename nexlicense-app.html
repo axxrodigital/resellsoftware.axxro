@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexLicense | Reseller Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg-main:#080a11; --sidebar-bg:rgba(13,17,30,0.7); --panel-bg:rgba(20,26,46,0.45);
+  --panel-border:rgba(255,255,255,0.06); --text-main:#f3f4f6; --text-muted:#9ca3af;
+  --accent-primary:#6366f1; --accent-gradient:linear-gradient(135deg,#6366f1 0%,#a855f7 100%);
+  --success:#10b981; --warning:#f59e0b; --error:#ef4444; --sidebar-width:260px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Plus Jakarta Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+body{background:var(--bg-main);color:var(--text-main);min-height:100vh;overflow-x:hidden;}
+.blur-ambient{position:fixed;width:500px;height:500px;border-radius:50%;background:rgba(99,102,241,.12);filter:blur(140px);z-index:-1;pointer-events:none;}
+.ambient-1{top:-10%;right:10%;} .ambient-2{bottom:-5%;left:15%;}
+a{color:inherit;}
+button{cursor:pointer;font-family:inherit;}
+input,select{font-family:inherit;}
+
+/* ---------- LOGIN ---------- */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+.login-card{width:100%;max-width:420px;background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:20px;padding:2.5rem;backdrop-filter:blur(20px);}
+.login-logo{width:48px;height:48px;background:var(--accent-gradient);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;}
+.login-title{text-align:center;font-size:1.4rem;font-weight:700;margin-bottom:.25rem;}
+.login-sub{text-align:center;color:var(--text-muted);font-size:.85rem;margin-bottom:1.75rem;}
+.field-group{margin-bottom:1.1rem;}
+.field-group label{display:block;font-size:.78rem;color:var(--text-muted);margin-bottom:.4rem;font-weight:500;}
+.field-group input{width:100%;padding:.75rem .9rem;background:rgba(255,255,255,.03);border:1px solid var(--panel-border);border-radius:10px;color:var(--text-main);font-size:.9rem;}
+.field-group input:focus{outline:none;border-color:var(--accent-primary);}
+.btn-primary{width:100%;padding:.85rem;background:var(--accent-gradient);border:none;border-radius:10px;color:#fff;font-weight:600;font-size:.9rem;margin-top:.3rem;}
+.demo-creds{margin-top:1.75rem;border-top:1px solid var(--panel-border);padding-top:1.25rem;}
+.demo-creds p{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem;}
+.demo-row{display:flex;justify-content:space-between;align-items:center;padding:.55rem .7rem;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:.4rem;font-size:.78rem;cursor:pointer;border:1px solid transparent;transition:.2s;}
+.demo-row:hover{border-color:var(--accent-primary);}
+.demo-role{font-weight:600;}
+.lang-toggle-login{position:absolute;top:1.5rem;right:1.5rem;}
+.login-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--error);padding:.6rem .8rem;border-radius:8px;font-size:.8rem;margin-bottom:1rem;display:none;}
+
+/* ---------- APP SHELL ---------- */
+#appShell{display:none;}
+#appShell.active{display:flex;}
+aside{width:var(--sidebar-width);min-width:var(--sidebar-width);background:var(--sidebar-bg);backdrop-filter:blur(20px);border-right:1px solid var(--panel-border);display:flex;flex-direction:column;padding:2rem 1.25rem;height:100vh;position:sticky;top:0;overflow-y:auto;}
+.brand-wrapper{display:flex;align-items:center;gap:.75rem;margin-bottom:2rem;padding-left:.5rem;}
+.brand-logo{width:32px;height:32px;background:var(--accent-gradient);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;}
+.brand-title{font-size:1.1rem;font-weight:700;letter-spacing:-.5px;background:linear-gradient(120deg,#fff 40%,var(--text-muted));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.role-badge{display:inline-block;font-size:.68rem;font-weight:700;padding:.25rem .6rem;border-radius:6px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#c7d2fe;margin-bottom:1.5rem;text-transform:uppercase;letter-spacing:.5px;}
+.nav-group{display:flex;flex-direction:column;gap:.3rem;list-style:none;flex:1;}
+.nav-item{display:flex;align-items:center;gap:.85rem;padding:.8rem 1rem;color:var(--text-muted);text-decoration:none;font-size:.88rem;font-weight:500;border-radius:10px;transition:.2s;background:none;border:none;width:100%;text-align:left;}
+.nav-item:hover{color:var(--text-main);background:rgba(255,255,255,.03);}
+.nav-item.active{color:#fff;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.25);}
+.nav-item i{width:18px;height:18px;flex-shrink:0;}
+.sidebar-footer{border-top:1px solid var(--panel-border);padding-top:1rem;margin-top:1rem;}
+.logout-btn{display:flex;align-items:center;gap:.7rem;color:var(--error);background:none;border:none;font-size:.85rem;font-weight:500;padding:.7rem 1rem;width:100%;border-radius:10px;}
+.logout-btn:hover{background:rgba(239,68,68,.08);}
+
+main{flex:1;padding:2.25rem;overflow-y:auto;height:100vh;}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;gap:1rem;flex-wrap:wrap;}
+.view-title h1{font-size:1.6rem;font-weight:700;letter-spacing:-.5px;margin-bottom:.2rem;}
+.view-title p{color:var(--text-muted);font-size:.85rem;}
+.top-actions{display:flex;gap:.75rem;align-items:center;}
+.lang-toggle{display:flex;background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;padding:.25rem;}
+.lang-btn{padding:.4rem .8rem;border:none;background:none;color:var(--text-muted);font-size:.78rem;font-weight:600;border-radius:7px;}
+.lang-btn.active{background:var(--accent-gradient);color:#fff;}
+
+.dashboard-view{display:none;animation:viewFade .35s ease forwards;}
+.dashboard-view.active-view{display:block;}
+@keyframes viewFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem;margin-bottom:2rem;}
+.kpi-card{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:16px;padding:1.4rem;}
+.kpi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.8rem;}
+.kpi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(99,102,241,.15);color:var(--accent-primary);}
+.kpi-value{font-size:1.6rem;font-weight:700;margin-bottom:.15rem;}
+.kpi-label{font-size:.78rem;color:var(--text-muted);}
+.kpi-delta{font-size:.72rem;font-weight:600;padding:.2rem .5rem;border-radius:6px;}
+.kpi-delta.up{background:rgba(16,185,129,.15);color:var(--success);}
+.kpi-delta.down{background:rgba(239,68,68,.15);color:var(--error);}
+
+.panel{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;}
+.panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;}
+.panel-header h3{font-size:1.05rem;font-weight:700;}
+.chart-row{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;}
+.chart-box{height:260px;position:relative;}
+@media(max-width:900px){.chart-row{grid-template-columns:1fr;}}
+
+.btn-action{background:var(--accent-gradient);border:none;color:#fff;padding:.6rem 1.1rem;border-radius:9px;font-size:.82rem;font-weight:600;display:inline-flex;align-items:center;gap:.4rem;}
+.btn-ghost{background:rgba(255,255,255,.04);border:1px solid var(--panel-border);color:var(--text-main);padding:.6rem 1.1rem;border-radius:9px;font-size:.82rem;font-weight:600;}
+.btn-danger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--error);padding:.5rem .9rem;border-radius:8px;font-size:.78rem;font-weight:600;}
+.btn-small{padding:.4rem .8rem;font-size:.75rem;}
+
+.search-input{padding:.6rem .9rem;background:rgba(255,255,255,.03);border:1px solid var(--panel-border);border-radius:9px;color:var(--text-main);font-size:.82rem;min-width:220px;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:.7rem .8rem;border-bottom:1px solid var(--panel-border);}
+td{padding:.85rem .8rem;font-size:.85rem;border-bottom:1px solid rgba(255,255,255,.03);}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;padding:.28rem .65rem;border-radius:20px;font-size:.7rem;font-weight:700;}
+.badge.success{background:rgba(16,185,129,.15);color:var(--success);}
+.badge.warning{background:rgba(245,158,11,.15);color:var(--warning);}
+.badge.error{background:rgba(239,68,68,.15);color:var(--error);}
+.badge.info{background:rgba(99,102,241,.15);color:var(--accent-primary);}
+
+.progress-track{width:100%;height:7px;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden;margin-top:.35rem;}
+.progress-fill{height:100%;background:var(--accent-gradient);border-radius:10px;}
+.progress-fill.warn{background:linear-gradient(135deg,#f59e0b,#ef4444);}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,7,15,.75);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center;padding:1.5rem;}
+.modal-overlay.show{display:flex;}
+.modal-box{width:100%;max-width:520px;background:#10131f;border:1px solid var(--panel-border);border-radius:18px;padding:1.75rem;max-height:88vh;overflow-y:auto;}
+.modal-box h3{font-size:1.15rem;font-weight:700;margin-bottom:1.25rem;}
+.form-row{margin-bottom:1rem;}
+.form-row label{display:block;font-size:.78rem;color:var(--text-muted);margin-bottom:.4rem;font-weight:500;}
+.form-row input,.form-row select{width:100%;padding:.7rem .85rem;background:rgba(255,255,255,.03);border:1px solid var(--panel-border);border-radius:9px;color:var(--text-main);font-size:.85rem;}
+.form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--panel-border);}
+.toggle-row:last-child{border-bottom:none;}
+.switch{position:relative;width:42px;height:24px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:24px;transition:.2s;cursor:pointer;}
+.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+input:checked + .slider{background:var(--accent-gradient);}
+input:checked + .slider:before{transform:translateX(18px);}
+.modal-actions{display:flex;gap:.75rem;margin-top:1.5rem;}
+.modal-actions button{flex:1;padding:.8rem;border-radius:10px;font-weight:600;font-size:.85rem;border:none;}
+
+.refund-banner{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(239,68,68,.1));border:1px solid rgba(245,158,11,.35);border-radius:14px;padding:1.25rem 1.5rem;display:flex;gap:1rem;align-items:flex-start;margin-bottom:1.5rem;}
+.refund-banner i{color:var(--warning);flex-shrink:0;margin-top:.15rem;}
+.refund-banner strong{color:#fde68a;}
+.clause-block{background:rgba(255,255,255,.02);border:1px solid var(--panel-border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+.clause-block h4{font-size:.92rem;font-weight:700;margin-bottom:.5rem;color:#fff;}
+.clause-block p{font-size:.83rem;color:var(--text-muted);line-height:1.6;}
+
+.feed-node{display:flex;gap:.8rem;align-items:flex-start;padding:.85rem 0;border-bottom:1px solid rgba(255,255,255,.04);list-style:none;}
+.feed-node:last-child{border-bottom:none;}
+.feed-indicator{width:8px;height:8px;border-radius:50%;margin-top:.4rem;flex-shrink:0;}
+#dashboard-feed-container{list-style:none;}
+
+.user-card-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;}
+.avatar-circle{width:52px;height:52px;border-radius:14px;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;}
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.25rem;}
+
+.vault-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;}
+@media(max-width:1100px){.vault-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:560px){.vault-grid{grid-template-columns:1fr;}}
+.vault-pagination{display:flex;align-items:center;justify-content:center;gap:.75rem;margin-top:1.5rem;}
+.vault-pagination button{background:rgba(255,255,255,.04);border:1px solid var(--panel-border);color:var(--text-main);padding:.5rem .9rem;border-radius:8px;font-size:.8rem;font-weight:600;}
+.vault-pagination button:disabled{opacity:.35;cursor:not-allowed;}
+.vault-pagination span{font-size:.8rem;color:var(--text-muted);}
+.vault-card{background:rgba(255,255,255,.02);border:1px solid var(--panel-border);border-radius:14px;padding:1.1rem;min-height:170px;display:flex;flex-direction:column;}
+.vault-card.empty{align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);border-style:dashed;transition:.2s;}
+.vault-card.empty:hover{border-color:var(--accent-primary);color:var(--text-main);background:rgba(99,102,241,.04);}
+.vault-card.empty i{width:22px;height:22px;margin-bottom:.5rem;}
+.vault-card-name{font-weight:700;font-size:.92rem;margin-bottom:.6rem;word-break:break-word;}
+.vault-card-field{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--text-muted);margin-bottom:.4rem;word-break:break-all;}
+.vault-card-field i{width:13px;height:13px;flex-shrink:0;color:var(--accent-primary);}
+.vault-pass-value{font-family:monospace;letter-spacing:1px;}
+.vault-eye{background:none;border:none;color:var(--text-muted);padding:0;margin-left:auto;flex-shrink:0;width:16px;height:16px;}
+.vault-card-actions{margin-top:auto;padding-top:.75rem;display:flex;gap:.5rem;}
+.vault-card-actions button{flex:1;padding:.4rem 0;font-size:.72rem;}
+.vault-notes{font-size:.72rem;color:var(--text-muted);font-style:italic;margin-top:.2rem;margin-bottom:.4rem;}
+.plan-card{background:rgba(255,255,255,.02);border:1px solid var(--panel-border);border-radius:14px;padding:1.3rem;}
+.plan-card h4{font-size:1rem;font-weight:700;margin-bottom:.3rem;}
+.plan-card .plan-price{font-size:1.5rem;font-weight:700;margin:.6rem 0;}
+.plan-card .plan-price span{font-size:.75rem;color:var(--text-muted);font-weight:500;}
+.plan-feat{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--text-muted);margin-bottom:.5rem;}
+.plan-feat i{width:14px;height:14px;color:var(--success);flex-shrink:0;}
+
+[data-lucide]{display:inline-flex;align-items:center;justify-content:center;}
+.login-logo [data-lucide]{width:24px;height:24px;}
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:10px;}
+
+@media(max-width:820px){
+  #appShell.active{flex-direction:column;}
+  aside{width:100%;height:auto;position:relative;flex-direction:row;overflow-x:auto;padding:1rem;}
+  .brand-wrapper{margin-bottom:0;margin-right:1rem;}
+  .nav-group{flex-direction:row;}
+  .sidebar-footer{display:none;}
+  .role-badge{display:none;}
+  main{height:auto;padding:1.25rem;}
+  .chart-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div id="axxroWatermark" style="position:fixed;bottom:10px;left:10px;z-index:9999;font-size:11px;font-weight:600;letter-spacing:.5px;color:rgba(255,255,255,0.35);background:rgba(13,17,30,0.55);border:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(6px);padding:5px 10px;border-radius:8px;pointer-events:none;user-select:none;font-family:'Plus Jakarta Sans',sans-serif;">
+  DEMO PREVIEW ONLY · MADE BY AXXRO DIGITAL
+</div>
+<div class="blur-ambient ambient-1"></div>
+<div class="blur-ambient ambient-2"></div>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="loginScreen">
+  <div class="lang-toggle-login">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')" id="loginLangEn">EN</button>
+      <button class="lang-btn" onclick="setLang('zh')" id="loginLangZh">中文</button>
+    </div>
+  </div>
+  <div class="login-card">
+    <div class="login-logo"><i data-lucide="shield-check" style="color:#fff"></i></div>
+    <div class="login-title" data-i18n="loginTitle">NexLicense Portal</div>
+    <div class="login-sub" data-i18n="loginSub">Sign in to your reseller dashboard</div>
+
+    <div class="login-error" id="loginError" data-i18n="loginErrorText">Invalid email or password.</div>
+
+    <div class="field-group">
+      <label data-i18n="emailLabel">Email</label>
+      <input type="text" id="loginEmail" placeholder="you@company.com">
+    </div>
+    <div class="field-group">
+      <label data-i18n="passLabel">Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" onclick="attemptLogin()" data-i18n="signInBtn">Sign In</button>
+
+    <div class="demo-creds">
+      <p data-i18n="demoLabel">Demo Credentials (click to autofill)</p>
+      <div class="demo-row" onclick="fillDemo('admin@nexlicense.io','Admin@2026')">
+        <span><span class="demo-role" data-i18n="roleSuperAdmin">Super Admin</span> — admin@nexlicense.io</span>
+        <span style="color:var(--text-muted)">Admin@2026</span>
+      </div>
+      <div class="demo-row" onclick="fillDemo('reseller@nexlicense.io','Reseller@2026')">
+        <span><span class="demo-role" data-i18n="roleReseller">Reseller / Manager</span> — reseller@nexlicense.io</span>
+        <span style="color:var(--text-muted)">Reseller@2026</span>
+      </div>
+      <div class="demo-row" onclick="fillDemo('client@nexlicense.io','Client@2026')">
+        <span><span class="demo-role" data-i18n="roleClient">Client User</span> — client@nexlicense.io</span>
+        <span style="color:var(--text-muted)">Client@2026</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="appShell">
+  <aside>
+    <div class="brand-wrapper">
+      <div class="brand-logo"><i data-lucide="shield-check" style="width:18px;height:18px"></i></div>
+      <div class="brand-title">NexLicense</div>
+    </div>
+    <div class="role-badge" id="roleBadge">Super Admin</div>
+
+    <ul class="nav-group" id="navGroup">
+      <!-- injected by JS based on role -->
+    </ul>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()"><i data-lucide="log-out" style="width:16px;height:16px"></i> <span data-i18n="logoutBtn">Log Out</span></button>
+    </div>
+  </aside>
+
+  <main>
+    <div class="top-bar">
+      <div class="view-title">
+        <h1 id="viewHeading">Dashboard</h1>
+        <p id="viewSub" data-i18n="dashSub">Overview of licenses, users and usage</p>
+      </div>
+      <div class="top-actions">
+        <div class="lang-toggle">
+          <button class="lang-btn active" onclick="setLang('en')" id="appLangEn">EN</button>
+          <button class="lang-btn" onclick="setLang('zh')" id="appLangZh">中文</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DASHBOARD VIEW ============ -->
+    <section class="dashboard-view active-view" id="view-dashboard">
+      <div class="refund-banner">
+        <i data-lucide="alert-triangle" style="width:20px;height:20px"></i>
+        <div>
+          <strong data-i18n="refundBannerTitle">Delivery Guarantee:</strong>
+          <span data-i18n="refundBannerText"> Any confirmed project delay or unapproved price increase entitles the client to a full refund, per the Terms &amp; Refund Policy.</span>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-icon"><i data-lucide="users" style="width:18px;height:18px"></i></div>
+            <span class="kpi-delta up">+8.2%</span>
+          </div>
+          <div class="kpi-value" id="kpiUsers">128</div>
+          <div class="kpi-label" data-i18n="kpiActiveUsers">Active Sub-Users</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-icon"><i data-lucide="key-round" style="width:18px;height:18px"></i></div>
+            <span class="kpi-delta up">+3</span>
+          </div>
+          <div class="kpi-value" id="kpiLicenses">42</div>
+          <div class="kpi-label" data-i18n="kpiLicenseSeats">Licensed Seats In Use</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-icon"><i data-lucide="dollar-sign" style="width:18px;height:18px"></i></div>
+            <span class="kpi-delta up">+12.4%</span>
+          </div>
+          <div class="kpi-value">$18,420</div>
+          <div class="kpi-label" data-i18n="kpiRevenue">Monthly Revenue</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-icon"><i data-lucide="triangle-alert" style="width:18px;height:18px"></i></div>
+            <span class="kpi-delta down">2</span>
+          </div>
+          <div class="kpi-value">2</div>
+          <div class="kpi-label" data-i18n="kpiExpiring">Licenses Expiring Soon</div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="panel">
+          <div class="panel-header"><h3 data-i18n="usageOverTime">Usage Over Time</h3></div>
+          <div class="chart-box"><canvas id="dashMainChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3 data-i18n="liveActivity">Live Activity</h3></div>
+          <ul id="dashboard-feed-container"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ USERS VIEW ============ -->
+    <section class="dashboard-view" id="view-users">
+      <div class="panel">
+        <div class="panel-header">
+          <h3 data-i18n="userMgmtTitle">Sub-User Management</h3>
+          <div style="display:flex;gap:.75rem;">
+            <input class="search-input" id="userSearch" placeholder="Search users..." data-i18n-ph="searchUsersPh" oninput="renderUsers()">
+            <button class="btn-action" onclick="openUserModal()"><i data-lucide="user-plus" style="width:15px;height:15px"></i> <span data-i18n="addUserBtn">Add User</span></button>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th data-i18n="thName">Name</th><th data-i18n="thPlan">Plan</th><th data-i18n="thFeatures">Features</th>
+            <th data-i18n="thUsage">Usage</th><th data-i18n="thExpiry">Expiry</th><th data-i18n="thStatus">Status</th><th></th>
+          </tr></thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ LICENSE PLANS VIEW ============ -->
+    <section class="dashboard-view" id="view-plans">
+      <div class="panel">
+        <div class="panel-header">
+          <h3 data-i18n="plansTitle">License Plans</h3>
+          <button class="btn-action" onclick="alert(t('planCreateAlert'))"><i data-lucide="plus" style="width:15px;height:15px"></i> <span data-i18n="newPlanBtn">New Plan</span></button>
+        </div>
+        <div class="plan-grid" id="planGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============ USAGE & LIMITS VIEW ============ -->
+    <section class="dashboard-view" id="view-limits">
+      <div class="panel">
+        <div class="panel-header"><h3 data-i18n="limitsTitle">Per-User Usage &amp; Limits</h3></div>
+        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1.25rem;" data-i18n="limitsDesc">Every seat can be capped independently by feature access, monthly action count, word/character volume, and license duration.</p>
+        <div id="limitsList"></div>
+      </div>
+    </section>
+
+    <!-- ============ BILLING VIEW ============ -->
+    <section class="dashboard-view" id="view-billing">
+      <div class="panel">
+        <div class="panel-header">
+          <h3 data-i18n="billingTitle">Transactions</h3>
+          <input class="search-input" id="txSearch" placeholder="Search transactions..." data-i18n-ph="searchTxPh" oninput="renderTx()">
+        </div>
+        <table>
+          <thead><tr>
+            <th data-i18n="thTxId">Ref</th><th data-i18n="thCustomer">Customer</th><th data-i18n="thAmount">Amount</th>
+            <th data-i18n="thDate">Date</th><th data-i18n="thStatus">Status</th>
+          </tr></thead>
+          <tbody id="txTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ TERMS & REFUND VIEW ============ -->
+    <section class="dashboard-view" id="view-terms">
+      <div class="panel">
+        <div class="panel-header"><h3 data-i18n="termsTitle">Terms &amp; Refund Policy</h3></div>
+
+        <div class="clause-block">
+          <h4 data-i18n="clause1H">1. Service Delivery Timeline</h4>
+          <p data-i18n="clause1P">The provider commits to delivering the agreed project, license activation, or feature rollout within the timeline confirmed in writing at the time of order. Any deviation must be disclosed to the client as soon as it is identified.</p>
+        </div>
+        <div class="clause-block">
+          <h4 data-i18n="clause2H">2. Full Refund on Delay</h4>
+          <p data-i18n="clause2P">If the confirmed delivery date is missed for reasons attributable to the provider, the client is entitled to a full refund of all amounts paid for the affected order, with no deductions or penalties, upon request.</p>
+        </div>
+        <div class="clause-block">
+          <h4 data-i18n="clause3H">3. Full Refund on Unapproved Price Increase</h4>
+          <p data-i18n="clause3P">Prices are locked at the time of order confirmation. If the provider raises the price of an active plan or add-on without the client's prior written approval, the client may cancel and receive a full refund of the affected charges.</p>
+        </div>
+        <div class="clause-block">
+          <h4 data-i18n="clause4H">4. Fair Use &amp; License Limits</h4>
+          <p data-i18n="clause4P">Each licensed seat is bound by the feature access, monthly usage count, word/character volume, and duration limits configured by the admin. Limits reset or expire according to the plan cycle shown on the user's profile.</p>
+        </div>
+        <div class="clause-block">
+          <h4 data-i18n="clause5H">5. Account Sharing &amp; Compliance</h4>
+          <p data-i18n="clause5P">This platform is intended for licensing access to services the provider is authorized to redistribute. Sub-licensing of third-party accounts in violation of that third party's own terms of service is not supported by this system.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ AUDIT LOG VIEW ============ -->
+    <section class="dashboard-view" id="view-audit">
+      <div class="panel">
+        <div class="panel-header"><h3 data-i18n="auditTitle">Audit Log</h3></div>
+        <table>
+          <thead><tr><th data-i18n="thTimestamp">Timestamp</th><th data-i18n="thScope">Scope</th><th data-i18n="thContext">Event</th><th data-i18n="thIp">IP</th><th data-i18n="thRisk">Risk</th></tr></thead>
+          <tbody id="auditTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ VAULT PAGES: Turnitin / iAuthenticate / Stealth Writer ============ -->
+    <section class="dashboard-view" id="view-turnitin">
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Turnitin <span data-i18n="vaultSubtitle" style="font-weight:400;color:var(--text-muted);font-size:.8rem;">— Personal Credential Vault</span></h3>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+            <input class="search-input" id="vaultSearch-turnitin" placeholder="Search by name or email..." data-i18n-ph="vaultSearchPh" oninput="onVaultSearch('turnitin')">
+            <button class="btn-ghost btn-small" onclick="exportVault('turnitin')"><i data-lucide="file-text" style="width:14px;height:14px;"></i> <span data-i18n="vaultExportBtn">Export</span></button>
+            <button class="btn-ghost btn-small" onclick="triggerVaultImport('turnitin')"><i data-lucide="file-text" style="width:14px;height:14px;"></i> <span data-i18n="vaultImportBtn">Import</span></button>
+            <input type="file" id="vaultImportInput-turnitin" accept="application/json" style="display:none;" onchange="importVault('turnitin', this)">
+            <button class="btn-action btn-small" onclick="openVaultModal('turnitin', null)"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> <span data-i18n="vaultAddCard">Add Credential</span></button>
+          </div>
+        </div>
+        <p style="color:var(--text-muted);font-size:.78rem;margin-bottom:1rem;" id="vaultCount-turnitin"></p>
+        <div class="vault-grid" id="vaultGrid-turnitin"></div>
+        <div class="vault-pagination" id="vaultPagination-turnitin"></div>
+      </div>
+    </section>
+    <section class="dashboard-view" id="view-ithenticate">
+      <div class="panel">
+        <div class="panel-header">
+          <h3>iAuthenticate <span data-i18n="vaultSubtitle" style="font-weight:400;color:var(--text-muted);font-size:.8rem;">— Personal Credential Vault</span></h3>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+            <input class="search-input" id="vaultSearch-ithenticate" placeholder="Search by name or email..." data-i18n-ph="vaultSearchPh" oninput="onVaultSearch('ithenticate')">
+            <button class="btn-ghost btn-small" onclick="exportVault('ithenticate')"><i data-lucide="file-text" style="width:14px;height:14px;"></i> <span data-i18n="vaultExportBtn">Export</span></button>
+            <button class="btn-ghost btn-small" onclick="triggerVaultImport('ithenticate')"><i data-lucide="file-text" style="width:14px;height:14px;"></i> <span data-i18n="vaultImportBtn">Import</span></button>
+            <input type="file" id="vaultImportInput-ithenticate" accept="application/json" style="display:none;" onchange="importVault('ithenticate', this)">
+            <button class="btn-action btn-small" onclick="openVaultModal('ithenticate', null)"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> <span data-i18n="vaultAddCard">Add Credential</span></button>
+          </div>
+        </div>
+        <p style="color:var(--text-muted);font-size:.78rem;margin-bottom:1rem;" id="vaultCount-ithenticate"></p>
+        <div class="vault-grid" id="vaultGrid-ithenticate"></div>
+        <div class="vault-pagination" id="vaultPagination-ithenticate"></div>
+      </div>
+    </section>
+    <section class="dashboard-view" id="view-stealthwriter">
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Stealth Writer <span data-i18n="vaultSubtitle" style="font-weight:400;color:var(--text-muted);font-size:.8rem;">— Personal Credential Vault</span></h3>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+            <input class="search-input" id="vaultSearch-stealthwriter" placeholder="Search by name or email..." data-i18n-ph="vaultSearchPh" oninput="onVaultSearch('stealthwriter')">
+            <button class="btn-ghost btn-small" onclick="exportVault('stealthwriter')"><i data-lucide="file-text" style="width:14px;height:14px;"></i> <span data-i18n="vaultExportBtn">Export</span></button>
+            <button class="btn-ghost btn-small" onclick="triggerVaultImport('stealthwriter')"><i data-lucide="file-text" style="width:14px;height:14px;"></i> <span data-i18n="vaultImportBtn">Import</span></button>
+            <input type="file" id="vaultImportInput-stealthwriter" accept="application/json" style="display:none;" onchange="importVault('stealthwriter', this)">
+            <button class="btn-action btn-small" onclick="openVaultModal('stealthwriter', null)"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> <span data-i18n="vaultAddCard">Add Credential</span></button>
+          </div>
+        </div>
+        <p style="color:var(--text-muted);font-size:.78rem;margin-bottom:1rem;" id="vaultCount-stealthwriter"></p>
+        <div class="vault-grid" id="vaultGrid-stealthwriter"></div>
+        <div class="vault-pagination" id="vaultPagination-stealthwriter"></div>
+      </div>
+    </section>
+
+    <!-- ============ SETTINGS VIEW ============ -->
+    <section class="dashboard-view" id="view-settings">
+      <div class="panel">
+        <div class="panel-header"><h3 data-i18n="settingsTitle">Account Settings</h3></div>
+        <div class="form-grid2">
+          <div class="form-row"><label data-i18n="companyName">Company / Reseller Name</label><input type="text" value="NexLicense Reseller Co."></div>
+          <div class="form-row"><label data-i18n="supportEmail">Support Email</label><input type="text" value="support@nexlicense.io"></div>
+        </div>
+        <button class="btn-action" onclick="alert(t('settingsSaved'))" data-i18n="saveChangesBtn">Save Changes</button>
+      </div>
+    </section>
+
+    <!-- ============ CLIENT (single seat) VIEW ============ -->
+    <section class="dashboard-view" id="view-myaccess">
+      <div class="panel">
+        <div class="user-card-header">
+          <div class="avatar-circle">RW</div>
+          <div>
+            <h3 style="font-size:1.1rem;font-weight:700;">Ren Watanabe</h3>
+            <p style="color:var(--text-muted);font-size:.82rem;" data-i18n="clientPlanLine">Plan: Professional — expires 2026-09-30</p>
+          </div>
+        </div>
+        <div class="panel-header"><h3 data-i18n="myFeaturesTitle">My Licensed Features</h3></div>
+        <div id="clientFeatureList"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3 data-i18n="myUsageTitle">My Usage This Cycle</h3></div>
+        <div id="clientUsageBars"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ================= USER MODAL ================= -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal-box">
+    <h3 data-i18n="addUserModalTitle">Add / Edit Sub-User</h3>
+    <div class="form-row"><label data-i18n="fullNameLabel">Full Name</label><input type="text" id="mUserName" placeholder="e.g. Sakura Tanaka"></div>
+    <div class="form-grid2">
+      <div class="form-row"><label data-i18n="emailLabel">Email</label><input type="text" id="mUserEmail" placeholder="user@example.com"></div>
+      <div class="form-row"><label data-i18n="planLabel">Plan</label>
+        <select id="mUserPlan">
+          <option value="Starter">Starter</option>
+          <option value="Professional" selected>Professional</option>
+          <option value="Enterprise">Enterprise</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid2">
+      <div class="form-row"><label data-i18n="usageCapLabel">Monthly Usage Cap (actions)</label><input type="number" id="mUsageCap" value="100"></div>
+      <div class="form-row"><label data-i18n="wordCapLabel">Word/Character Cap</label><input type="number" id="mWordCap" value="20000"></div>
+    </div>
+    <div class="form-row"><label data-i18n="durationLabel">License Duration (expiry date)</label><input type="date" id="mExpiry" value="2026-12-31"></div>
+
+    <div class="form-row">
+      <label data-i18n="featureAccessLabel">Feature Access</label>
+      <div class="toggle-row">
+        <span data-i18n="featureA">Service A — Similarity / Originality Check</span>
+        <label class="switch"><input type="checkbox" id="mFeatA" checked><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span data-i18n="featureB">Service B — AI Text Refinement</span>
+        <label class="switch"><input type="checkbox" id="mFeatB" checked><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span data-i18n="featureC">API / Bulk Export Access</span>
+        <label class="switch"><input type="checkbox" id="mFeatC"><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeUserModal()" data-i18n="cancelBtn">Cancel</button>
+      <button class="btn-action" onclick="saveUser()" data-i18n="saveUserBtn">Save User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= VAULT ENTRY MODAL ================= -->
+<div class="modal-overlay" id="vaultModal">
+  <div class="modal-box">
+    <h3 data-i18n="vaultModalTitle">Credential Card</h3>
+    <div class="form-row"><label data-i18n="vaultNameLabel">Card Name</label><input type="text" id="vName" placeholder="e.g. Main Support Login"></div>
+    <div class="form-row"><label data-i18n="vaultEmailLabel">Email / Username</label><input type="text" id="vEmail" placeholder="name@example.com"></div>
+    <div class="form-row">
+      <label data-i18n="vaultPassLabel">Password</label>
+      <div style="position:relative;">
+        <input type="password" id="vPass" placeholder="••••••••" style="padding-right:2.5rem;">
+        <button type="button" onclick="toggleVaultModalPass()" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);padding:0;width:20px;height:20px;">
+          <i data-lucide="eye" id="vaultModalEyeIcon" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+    </div>
+    <div class="form-row"><label data-i18n="vaultNotesLabel">Notes (optional)</label><input type="text" id="vNotes" placeholder="e.g. renew date, related project"></div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeVaultModal()" data-i18n="cancelBtn">Cancel</button>
+      <button class="btn-action" onclick="saveVaultEntry()" data-i18n="saveVaultBtn">Save Card</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================== I18N ==================== */
+const I18N = {
+en:{
+  loginTitle:"NexLicense Portal", loginSub:"Sign in to your reseller dashboard",
+  loginErrorText:"Invalid email or password.", emailLabel:"Email", passLabel:"Password",
+  signInBtn:"Sign In", demoLabel:"Demo Credentials (click to autofill)",
+  roleSuperAdmin:"Super Admin", roleReseller:"Reseller / Manager", roleClient:"Client User",
+  logoutBtn:"Log Out", dashSub:"Overview of licenses, users and usage",
+  refundBannerTitle:"Delivery Guarantee:",
+  refundBannerText:" Any confirmed project delay or unapproved price increase entitles the client to a full refund, per the Terms & Refund Policy.",
+  kpiActiveUsers:"Active Sub-Users", kpiLicenseSeats:"Licensed Seats In Use", kpiRevenue:"Monthly Revenue", kpiExpiring:"Licenses Expiring Soon",
+  usageOverTime:"Usage Over Time", liveActivity:"Live Activity",
+  userMgmtTitle:"Sub-User Management", searchUsersPh:"Search users...", addUserBtn:"Add User",
+  thName:"Name",thPlan:"Plan",thFeatures:"Features",thUsage:"Usage",thExpiry:"Expiry",thStatus:"Status",
+  plansTitle:"License Plans", newPlanBtn:"New Plan", planCreateAlert:"Plan builder — configure pricing, feature toggles and limit defaults here.",
+  limitsTitle:"Per-User Usage & Limits", limitsDesc:"Every seat can be capped independently by feature access, monthly action count, word/character volume, and license duration.",
+  billingTitle:"Transactions", searchTxPh:"Search transactions...",
+  thTxId:"Ref",thCustomer:"Customer",thAmount:"Amount",thDate:"Date",
+  termsTitle:"Terms & Refund Policy",
+  clause1H:"1. Service Delivery Timeline", clause1P:"The provider commits to delivering the agreed project, license activation, or feature rollout within the timeline confirmed in writing at the time of order. Any deviation must be disclosed to the client as soon as it is identified.",
+  clause2H:"2. Full Refund on Delay", clause2P:"If the confirmed delivery date is missed for reasons attributable to the provider, the client is entitled to a full refund of all amounts paid for the affected order, with no deductions or penalties, upon request.",
+  clause3H:"3. Full Refund on Unapproved Price Increase", clause3P:"Prices are locked at the time of order confirmation. If the provider raises the price of an active plan or add-on without the client's prior written approval, the client may cancel and receive a full refund of the affected charges.",
+  clause4H:"4. Fair Use & License Limits", clause4P:"Each licensed seat is bound by the feature access, monthly usage count, word/character volume, and duration limits configured by the admin. Limits reset or expire according to the plan cycle shown on the user's profile.",
+  clause5H:"5. Account Sharing & Compliance", clause5P:"This platform is intended for licensing access to services the provider is authorized to redistribute. Sub-licensing of third-party accounts in violation of that third party's own terms of service is not supported by this system.",
+  auditTitle:"Audit Log", thTimestamp:"Timestamp",thScope:"Scope",thContext:"Event",thIp:"IP",thRisk:"Risk",
+  settingsTitle:"Account Settings", companyName:"Company / Reseller Name", supportEmail:"Support Email",
+  saveChangesBtn:"Save Changes", settingsSaved:"Settings saved.",
+  clientPlanLine:"Plan: Professional — expires 2026-09-30", myFeaturesTitle:"My Licensed Features", myUsageTitle:"My Usage This Cycle",
+  featureA:"Service A — Similarity / Originality Check", featureB:"Service B — AI Text Refinement", featureC:"API / Bulk Export Access",
+  addUserModalTitle:"Add / Edit Sub-User", fullNameLabel:"Full Name", planLabel:"Plan",
+  usageCapLabel:"Monthly Usage Cap (actions)", wordCapLabel:"Word/Character Cap", durationLabel:"License Duration (expiry date)",
+  featureAccessLabel:"Feature Access", cancelBtn:"Cancel", saveUserBtn:"Save User",
+  navDashboard:"Dashboard", navUsers:"Sub-Users", navPlans:"License Plans", navLimits:"Usage & Limits", navBilling:"Billing", navTerms:"Terms & Refund", navAudit:"Audit Log", navSettings:"Settings", navMyAccess:"My Access",
+  statusActive:"Active", statusSuspended:"Suspended", statusExpiring:"Expiring Soon",
+  actionEdit:"Edit", actionSuspend:"Suspend", userAddedMsg:"User added.", fillAllFields:"Please fill in name and email.",
+  vaultSubtitle:"— Personal Credential Vault", vaultModalTitle:"Credential Card", vaultNameLabel:"Card Name",
+  vaultEmailLabel:"Email / Username", vaultPassLabel:"Password", vaultNotesLabel:"Notes (optional)",
+  saveVaultBtn:"Save Card", vaultAddCard:"Add Credential", vaultEditBtn:"Edit", vaultDeleteBtn:"Delete",
+  vaultConfirmDelete:"Delete this credential card?", vaultFillRequired:"Please enter a card name.",
+  vaultShow:"Show", vaultHide:"Hide"
+},
+zh:{
+  loginTitle:"NexLicense 管理门户", loginSub:"登录您的分销商控制台",
+  loginErrorText:"邮箱或密码错误。", emailLabel:"邮箱", passLabel:"密码",
+  signInBtn:"登录", demoLabel:"演示账号（点击自动填充）",
+  roleSuperAdmin:"超级管理员", roleReseller:"分销商 / 经理", roleClient:"客户用户",
+  logoutBtn:"退出登录", dashSub:"许可证、用户与使用情况总览",
+  refundBannerTitle:"交付保障：",
+  refundBannerText:" 根据《条款与退款政策》，任何经确认的项目延误或未经批准的价格上涨，客户均有权获得全额退款。",
+  kpiActiveUsers:"活跃子账户", kpiLicenseSeats:"已使用授权席位", kpiRevenue:"月收入", kpiExpiring:"即将到期的许可证",
+  usageOverTime:"使用趋势", liveActivity:"实时动态",
+  userMgmtTitle:"子账户管理", searchUsersPh:"搜索用户...", addUserBtn:"添加用户",
+  thName:"姓名",thPlan:"套餐",thFeatures:"功能",thUsage:"使用情况",thExpiry:"到期时间",thStatus:"状态",
+  plansTitle:"许可证套餐", newPlanBtn:"新建套餐", planCreateAlert:"套餐编辑器 — 在此配置价格、功能开关及默认限额。",
+  limitsTitle:"用户使用与限额", limitsDesc:"每个席位均可独立设置功能权限、每月操作次数、字数/字符量以及许可证有效期。",
+  billingTitle:"交易记录", searchTxPh:"搜索交易...",
+  thTxId:"编号",thCustomer:"客户",thAmount:"金额",thDate:"日期",
+  termsTitle:"条款与退款政策",
+  clause1H:"一、服务交付时限", clause1P:"服务提供方承诺在下单时书面确认的时限内完成约定的项目、许可证激活或功能上线。任何延误一经发现应立即告知客户。",
+  clause2H:"二、延误全额退款", clause2P:"如因服务提供方原因导致确认交付日期未能达成，客户有权就受影响订单已付款项申请全额退款，不扣除任何费用。",
+  clause3H:"三、未经批准涨价全额退款", clause3P:"价格在订单确认时即被锁定。如服务提供方在未经客户书面同意的情况下上调现有套餐或附加服务价格，客户可取消并获得受影响费用的全额退款。",
+  clause4H:"四、合理使用与许可证限额", clause4P:"每个授权席位均受管理员设置的功能权限、每月使用次数、字数/字符量及有效期限制约束。限额将根据用户资料中显示的套餐周期重置或到期。",
+  clause5H:"五、账户共享与合规性", clause5P:"本平台仅用于授权服务提供方有权转授的服务访问许可。违反第三方自身服务条款的第三方账户转授不在本系统支持范围内。",
+  auditTitle:"审计日志", thTimestamp:"时间戳",thScope:"范围",thContext:"事件",thIp:"IP地址",thRisk:"风险",
+  settingsTitle:"账户设置", companyName:"公司 / 分销商名称", supportEmail:"客服邮箱",
+  saveChangesBtn:"保存更改", settingsSaved:"设置已保存。",
+  clientPlanLine:"套餐：专业版 — 到期日 2026-09-30", myFeaturesTitle:"我的授权功能", myUsageTitle:"本周期使用情况",
+  featureA:"服务 A — 相似度 / 原创性检测", featureB:"服务 B — AI 文本优化", featureC:"API / 批量导出权限",
+  addUserModalTitle:"添加 / 编辑子账户", fullNameLabel:"姓名", planLabel:"套餐",
+  usageCapLabel:"每月使用上限（次数）", wordCapLabel:"字数 / 字符上限", durationLabel:"许可证有效期（到期日）",
+  featureAccessLabel:"功能权限", cancelBtn:"取消", saveUserBtn:"保存用户",
+  navDashboard:"控制台", navUsers:"子账户", navPlans:"许可证套餐", navLimits:"使用与限额", navBilling:"账单", navTerms:"条款与退款", navAudit:"审计日志", navSettings:"设置", navMyAccess:"我的权限",
+  statusActive:"正常", statusSuspended:"已暂停", statusExpiring:"即将到期",
+  actionEdit:"编辑", actionSuspend:"暂停", userAddedMsg:"用户已添加。", fillAllFields:"请填写姓名和邮箱。",
+  vaultSubtitle:"— 个人凭证保险库", vaultModalTitle:"凭证卡片", vaultNameLabel:"卡片名称",
+  vaultEmailLabel:"邮箱 / 用户名", vaultPassLabel:"密码", vaultNotesLabel:"备注（可选）",
+  saveVaultBtn:"保存卡片", vaultAddCard:"添加凭证", vaultEditBtn:"编辑", vaultDeleteBtn:"删除",
+  vaultConfirmDelete:"删除此凭证卡片？", vaultFillRequired:"请输入卡片名称。",
+  vaultShow:"显示", vaultHide:"隐藏"
+}
+};
+let currentLang = 'en';
+const ICONS = {
+  'alert-triangle': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  'triangle-alert': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  'check': '<path d="M20 6 9 17l-5-5"/>',
+  'dollar-sign': '<line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  'key-round': '<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>',
+  'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
+  'plus': '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  'user-plus': '<path d="M2 21a8 8 0 0 1 13.292-6"/><circle cx="10" cy="8" r="5"/><path d="M19 16v6"/><path d="M22 19h-6"/>',
+  'users': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  'credit-card': '<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+  'file-text': '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+  'history': '<path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  'layout-dashboard': '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+  'package': '<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73Z"/><path d="M12 22V12"/><path d="M3.29 7 12 12l8.71-5"/><path d="m7.5 4.27 9 5.15"/>',
+  'settings': '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  'sliders-horizontal': '<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
+  'eye': '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+  'eye-off': '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>'
+};
+function renderAllIcons(){
+  document.querySelectorAll('[data-lucide]').forEach(el=>{
+    const name = el.getAttribute('data-lucide');
+    if(ICONS[name]){
+      el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%;display:block;">${ICONS[name]}</svg>`;
+    }
+  });
+}
+function safeCreateIcons(){ renderAllIcons(); }
+function t(key){ return (I18N[currentLang] && I18N[currentLang][key]) || key; }
+
+function setLang(lang){
+  currentLang = lang;
+  document.getElementById('htmlRoot').lang = lang === 'zh' ? 'zh-CN' : 'en';
+  ['loginLangEn','appLangEn'].forEach(id=>document.getElementById(id).classList.toggle('active', lang==='en'));
+  ['loginLangZh','appLangZh'].forEach(id=>document.getElementById(id).classList.toggle('active', lang==='zh'));
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(I18N[lang][key]) el.innerHTML = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-ph');
+    if(I18N[lang][key]) el.setAttribute('placeholder', I18N[lang][key]);
+  });
+  renderNav();
+  renderPlans();
+  renderClientView();
+  if(typeof VAULTS !== 'undefined' && currentUser && currentUser.role === 'admin'){
+    renderVaultPage('turnitin'); renderVaultPage('ithenticate'); renderVaultPage('stealthwriter');
+  }
+  document.getElementById('viewHeading').textContent = NAV_ITEMS.find(n=>n.id===currentView)?.label() || 'Dashboard';
+}
+
+/* ==================== AUTH ==================== */
+const DEMO_ACCOUNTS = {
+  'admin@nexlicense.io': { pass:'Admin@2026', role:'admin', name:'Super Admin', initials:'SA' },
+  'reseller@nexlicense.io': { pass:'Reseller@2026', role:'reseller', name:'Reseller Manager', initials:'RM' },
+  'client@nexlicense.io': { pass:'Client@2026', role:'client', name:'Ren Watanabe', initials:'RW' }
+};
+let currentUser = null;
+
+function fillDemo(email, pass){
+  document.getElementById('loginEmail').value = email;
+  document.getElementById('loginPass').value = pass;
+}
+
+function attemptLogin(){
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  const acc = DEMO_ACCOUNTS[email];
+  const errBox = document.getElementById('loginError');
+  if(!acc || acc.pass !== pass){
+    errBox.style.display = 'block';
+    return;
+  }
+  errBox.style.display = 'none';
+  currentUser = { email, ...acc };
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').classList.add('active');
+  document.getElementById('roleBadge').textContent = t(acc.role === 'admin' ? 'roleSuperAdmin' : acc.role === 'reseller' ? 'roleReseller' : 'roleClient');
+  initAppForRole(acc.role);
+  safeCreateIcons();
+}
+
+function logout(){
+  currentUser = null;
+  document.getElementById('appShell').classList.remove('active');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+/* ==================== NAV / ROLE ROUTING ==================== */
+const NAV_ITEMS = [
+  { id:'dashboard', icon:'layout-dashboard', label:()=>t('navDashboard'), roles:['admin','reseller'] },
+  { id:'users', icon:'users', label:()=>t('navUsers'), roles:['admin','reseller'] },
+  { id:'plans', icon:'package', label:()=>t('navPlans'), roles:['admin'] },
+  { id:'limits', icon:'sliders-horizontal', label:()=>t('navLimits'), roles:['admin','reseller'] },
+  { id:'billing', icon:'credit-card', label:()=>t('navBilling'), roles:['admin','reseller'] },
+  { id:'terms', icon:'file-text', label:()=>t('navTerms'), roles:['admin','reseller','client'] },
+  { id:'audit', icon:'history', label:()=>t('navAudit'), roles:['admin'] },
+  { id:'turnitin', icon:'key-round', label:()=>'Turnitin', roles:['admin'] },
+  { id:'ithenticate', icon:'key-round', label:()=>'iAuthenticate', roles:['admin'] },
+  { id:'stealthwriter', icon:'key-round', label:()=>'Stealth Writer', roles:['admin'] },
+  { id:'settings', icon:'settings', label:()=>t('navSettings'), roles:['admin','reseller'] },
+  { id:'myaccess', icon:'key-round', label:()=>t('navMyAccess'), roles:['client'] },
+];
+let currentView = 'dashboard';
+
+function renderNav(){
+  if(!currentUser) return;
+  const group = document.getElementById('navGroup');
+  const items = NAV_ITEMS.filter(n => n.roles.includes(currentUser.role));
+  group.innerHTML = items.map(n => `
+    <li>
+      <button class="nav-item ${currentView===n.id?'active':''}" onclick="switchView('${n.id}')">
+        <i data-lucide="${n.icon}"></i> <span>${n.label()}</span>
+      </button>
+    </li>
+  `).join('');
+  safeCreateIcons();
+}
+
+function switchView(id){
+  currentView = id;
+  document.querySelectorAll('.dashboard-view').forEach(v=>v.classList.remove('active-view'));
+  document.getElementById('view-'+id).classList.add('active-view');
+  const item = NAV_ITEMS.find(n=>n.id===id);
+  document.getElementById('viewHeading').textContent = item ? item.label() : '';
+  renderNav();
+  if(id==='dashboard' && !charts.dashMain) instantiateCharts();
+  if(id==='turnitin' || id==='ithenticate' || id==='stealthwriter') renderVaultPage(id);
+}
+
+function initAppForRole(role){
+  currentView = role === 'client' ? 'myaccess' : 'dashboard';
+  document.querySelectorAll('.dashboard-view').forEach(v=>v.classList.remove('active-view'));
+  document.getElementById('view-'+currentView).classList.add('active-view');
+  renderNav();
+  document.getElementById('viewHeading').textContent = NAV_ITEMS.find(n=>n.id===currentView).label();
+  renderUsers();
+  renderPlans();
+  renderTx();
+  renderAudit();
+  renderLimits();
+  renderFeed();
+  renderClientView();
+  if(role === 'admin'){ renderVaultPage('turnitin'); renderVaultPage('ithenticate'); renderVaultPage('stealthwriter'); }
+  if(currentView === 'dashboard') instantiateCharts();
+}
+
+/* ==================== MOCK DATA ==================== */
+const USERS = [
+  { name:'Sakura Tanaka', email:'sakura@client.com', plan:'Professional', featA:true, featB:true, featC:false, usageUsed:64, usageCap:100, wordUsed:14200, wordCap:20000, expiry:'2026-09-30', status:'active' },
+  { name:'Kenji Yamamoto', email:'kenji@client.com', plan:'Starter', featA:true, featB:false, featC:false, usageUsed:30, usageCap:40, wordUsed:9000, wordCap:10000, expiry:'2026-07-18', status:'expiring' },
+  { name:'Haruto Suzuki', email:'haruto@client.com', plan:'Enterprise', featA:true, featB:true, featC:true, usageUsed:210, usageCap:500, wordUsed:88000, wordCap:150000, expiry:'2027-01-10', status:'active' },
+  { name:'Yui Nakamura', email:'yui@client.com', plan:'Professional', featA:true, featB:true, featC:false, usageUsed:99, usageCap:100, wordUsed:19800, wordCap:20000, expiry:'2026-08-02', status:'active' },
+  { name:'Sota Kobayashi', email:'sota@client.com', plan:'Starter', featA:false, featB:true, featC:false, usageUsed:12, usageCap:40, wordUsed:2000, wordCap:10000, expiry:'2026-06-30', status:'suspended' },
+];
+
+const PLANS = [
+  { name:'Starter', price:19, cycle:'mo', usage:40, words:'10,000', duration:'30 days', features:['featA'] },
+  { name:'Professional', price:49, cycle:'mo', usage:100, words:'20,000', duration:'30 days', features:['featA','featB'] },
+  { name:'Enterprise', price:149, cycle:'mo', usage:500, words:'150,000', duration:'90 days', features:['featA','featB','featC'] },
+];
+
+const TRANSACTIONS = [
+  { id:'TXN-8841', customerName:'Sakura Tanaka', amount:49.00, date:'2026-07-01', status:'Settled' },
+  { id:'TXN-8842', customerName:'Haruto Suzuki', amount:149.00, date:'2026-07-02', status:'Settled' },
+  { id:'TXN-8843', customerName:'Kenji Yamamoto', amount:19.00, date:'2026-07-03', status:'Pending' },
+  { id:'TXN-8844', customerName:'Yui Nakamura', amount:49.00, date:'2026-07-04', status:'Settled' },
+];
+
+const AUDIT = [
+  { timestamp:'2026-07-05 09:12', scope:'SECURITY', context:'Admin updated feature access for Kenji Yamamoto', ip:'10.0.4.2', risk:'LOW' },
+  { timestamp:'2026-07-05 08:47', scope:'BILLING', context:'Refund issued per delay clause — TXN-8839', ip:'10.0.4.2', risk:'LOW' },
+  { timestamp:'2026-07-04 21:03', scope:'ACCESS', context:'Sub-user login from new device', ip:'203.0.113.5', risk:'HIGH' },
+];
+
+let charts = {};
+
+/* ==================== RENDER: USERS ==================== */
+function statusBadge(status){
+  if(status==='active') return `<span class="badge success">${t('statusActive')}</span>`;
+  if(status==='suspended') return `<span class="badge error">${t('statusSuspended')}</span>`;
+  return `<span class="badge warning">${t('statusExpiring')}</span>`;
+}
+function featureChips(u){
+  let chips = '';
+  if(u.featA) chips += `<span class="badge info" style="margin-right:4px;">A</span>`;
+  if(u.featB) chips += `<span class="badge info" style="margin-right:4px;">B</span>`;
+  if(u.featC) chips += `<span class="badge info">API</span>`;
+  return chips || '—';
+}
+function renderUsers(){
+  const body = document.getElementById('usersTableBody');
+  if(!body) return;
+  const q = (document.getElementById('userSearch')?.value || '').toLowerCase();
+  const filtered = USERS.filter(u => (u.name+u.email+u.plan).toLowerCase().includes(q));
+  body.innerHTML = filtered.map(u => `
+    <tr>
+      <td style="font-weight:600;">${u.name}<div style="color:var(--text-muted);font-weight:400;font-size:.75rem;">${u.email}</div></td>
+      <td>${u.plan}</td>
+      <td>${featureChips(u)}</td>
+      <td style="min-width:120px;">
+        ${u.usageUsed}/${u.usageCap}
+        <div class="progress-track"><div class="progress-fill ${u.usageUsed/u.usageCap>0.85?'warn':''}" style="width:${Math.min(100,u.usageUsed/u.usageCap*100)}%"></div></div>
+      </td>
+      <td>${u.expiry}</td>
+      <td>${statusBadge(u.status)}</td>
+      <td><button class="btn-ghost btn-small" onclick="alert('${t('actionEdit')}: ${u.name}')">${t('actionEdit')}</button></td>
+    </tr>
+  `).join('');
+}
+
+/* ==================== RENDER: PLANS ==================== */
+function renderPlans(){
+  const grid = document.getElementById('planGrid');
+  if(!grid) return;
+  grid.innerHTML = PLANS.map(p => `
+    <div class="plan-card">
+      <h4>${p.name}</h4>
+      <div class="plan-price">$${p.price}<span>/${p.cycle}</span></div>
+      <div class="plan-feat"><i data-lucide="check"></i> ${p.usage} ${currentLang==='zh'?'次操作 / 月':'actions / month'}</div>
+      <div class="plan-feat"><i data-lucide="check"></i> ${p.words} ${currentLang==='zh'?'字符上限':'word/char cap'}</div>
+      <div class="plan-feat"><i data-lucide="check"></i> ${currentLang==='zh'?'有效期：':'Duration: '}${p.duration}</div>
+      <div class="plan-feat"><i data-lucide="check"></i> ${p.features.includes('featA')? t('featureA') : ''}</div>
+      ${p.features.includes('featB') ? `<div class="plan-feat"><i data-lucide="check"></i> ${t('featureB')}</div>` : ''}
+      ${p.features.includes('featC') ? `<div class="plan-feat"><i data-lucide="check"></i> ${t('featureC')}</div>` : ''}
+      <button class="btn-ghost btn-small" style="width:100%;margin-top:.75rem;" onclick="alert('${p.name} plan editor')">${t('actionEdit')}</button>
+    </div>
+  `).join('');
+  safeCreateIcons();
+}
+
+/* ==================== RENDER: LIMITS ==================== */
+function renderLimits(){
+  const list = document.getElementById('limitsList');
+  if(!list) return;
+  list.innerHTML = USERS.map(u => `
+    <div class="plan-card" style="margin-bottom:1rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+        <div>
+          <strong>${u.name}</strong>
+          <div style="color:var(--text-muted);font-size:.78rem;">${u.plan} · ${currentLang==='zh'?'到期':'expires'} ${u.expiry}</div>
+        </div>
+        ${statusBadge(u.status)}
+      </div>
+      <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.2rem;">${currentLang==='zh'?'操作次数':'Action count'}: ${u.usageUsed} / ${u.usageCap}</div>
+      <div class="progress-track"><div class="progress-fill ${u.usageUsed/u.usageCap>0.85?'warn':''}" style="width:${Math.min(100,u.usageUsed/u.usageCap*100)}%"></div></div>
+      <div style="font-size:.78rem;color:var(--text-muted);margin:.6rem 0 .2rem;">${currentLang==='zh'?'字数':'Word/char volume'}: ${u.wordUsed.toLocaleString()} / ${u.wordCap.toLocaleString()}</div>
+      <div class="progress-track"><div class="progress-fill ${u.wordUsed/u.wordCap>0.85?'warn':''}" style="width:${Math.min(100,u.wordUsed/u.wordCap*100)}%"></div></div>
+    </div>
+  `).join('');
+}
+
+/* ==================== RENDER: TRANSACTIONS ==================== */
+function renderTx(){
+  const body = document.getElementById('txTableBody');
+  if(!body) return;
+  const q = (document.getElementById('txSearch')?.value || '').toLowerCase();
+  const filtered = TRANSACTIONS.filter(x => (x.id+x.customerName).toLowerCase().includes(q));
+  body.innerHTML = filtered.map(x => `
+    <tr>
+      <td style="font-family:monospace;color:var(--accent-primary);font-weight:600;">${x.id}</td>
+      <td>${x.customerName}</td>
+      <td style="font-weight:600;">$${x.amount.toFixed(2)}</td>
+      <td>${x.date}</td>
+      <td><span class="badge ${x.status==='Settled'?'success':'warning'}">${x.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+/* ==================== RENDER: AUDIT ==================== */
+function renderAudit(){
+  const body = document.getElementById('auditTableBody');
+  if(!body) return;
+  body.innerHTML = AUDIT.map(a => `
+    <tr>
+      <td style="font-family:monospace;font-size:.78rem;">${a.timestamp}</td>
+      <td><span class="badge ${a.scope==='SECURITY'?'error':'info'}">${a.scope}</span></td>
+      <td>${a.context}</td>
+      <td style="font-family:monospace;color:var(--text-muted);">${a.ip}</td>
+      <td style="font-weight:700;color:${a.risk==='HIGH'?'var(--error)':'var(--success)'}">${a.risk}</td>
+    </tr>
+  `).join('');
+}
+
+/* ==================== RENDER: FEED ==================== */
+function renderFeed(){
+  const feed = document.getElementById('dashboard-feed-container');
+  if(!feed) return;
+  const scenarios = currentLang==='zh' ? [
+    { ctx:'许可证座席已同步至账单系统', color:'var(--success)' },
+    { ctx:'子账户使用量已刷新', color:'var(--accent-primary)' },
+    { ctx:'系统检测到较高风险的登录，已记录', color:'var(--warning)' },
+  ] : [
+    { ctx:'License seat synced with billing engine', color:'var(--success)' },
+    { ctx:'Sub-user usage counters refreshed', color:'var(--accent-primary)' },
+    { ctx:'Elevated-risk login detected and logged', color:'var(--warning)' },
+  ];
+  feed.innerHTML = scenarios.map(s => `
+    <li class="feed-node">
+      <div class="feed-indicator" style="background:${s.color};box-shadow:0 0 8px ${s.color}"></div>
+      <div><p style="font-weight:500;">${s.ctx}</p><span style="font-size:.72rem;color:var(--text-muted);">${currentLang==='zh'?'刚刚':'Just now'}</span></div>
+    </li>
+  `).join('');
+}
+
+/* ==================== RENDER: CLIENT VIEW ==================== */
+function renderClientView(){
+  const featList = document.getElementById('clientFeatureList');
+  const usageBars = document.getElementById('clientUsageBars');
+  if(!featList || !usageBars) return;
+  const u = USERS[0];
+  featList.innerHTML = `
+    <div class="toggle-row"><span>${t('featureA')}</span>${u.featA?'<span class="badge success">✓</span>':'<span class="badge error">✗</span>'}</div>
+    <div class="toggle-row"><span>${t('featureB')}</span>${u.featB?'<span class="badge success">✓</span>':'<span class="badge error">✗</span>'}</div>
+    <div class="toggle-row"><span>${t('featureC')}</span>${u.featC?'<span class="badge success">✓</span>':'<span class="badge error">✗</span>'}</div>
+  `;
+  usageBars.innerHTML = `
+    <div style="margin-bottom:1.25rem;">
+      <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.3rem;">${currentLang==='zh'?'操作次数':'Action count'}: ${u.usageUsed} / ${u.usageCap}</div>
+      <div class="progress-track"><div class="progress-fill ${u.usageUsed/u.usageCap>0.85?'warn':''}" style="width:${Math.min(100,u.usageUsed/u.usageCap*100)}%"></div></div>
+    </div>
+    <div>
+      <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.3rem;">${currentLang==='zh'?'字数':'Word/char volume'}: ${u.wordUsed.toLocaleString()} / ${u.wordCap.toLocaleString()}</div>
+      <div class="progress-track"><div class="progress-fill ${u.wordUsed/u.wordCap>0.85?'warn':''}" style="width:${Math.min(100,u.wordUsed/u.wordCap*100)}%"></div></div>
+    </div>
+  `;
+}
+
+/* ==================== USER MODAL ==================== */
+function openUserModal(){ document.getElementById('userModal').classList.add('show'); }
+function closeUserModal(){ document.getElementById('userModal').classList.remove('show'); }
+function saveUser(){
+  const name = document.getElementById('mUserName').value.trim();
+  const email = document.getElementById('mUserEmail').value.trim();
+  if(!name || !email){ alert(t('fillAllFields')); return; }
+  USERS.unshift({
+    name, email, plan: document.getElementById('mUserPlan').value,
+    featA: document.getElementById('mFeatA').checked,
+    featB: document.getElementById('mFeatB').checked,
+    featC: document.getElementById('mFeatC').checked,
+    usageUsed: 0, usageCap: parseInt(document.getElementById('mUsageCap').value)||100,
+    wordUsed: 0, wordCap: parseInt(document.getElementById('mWordCap').value)||20000,
+    expiry: document.getElementById('mExpiry').value, status:'active'
+  });
+  closeUserModal();
+  renderUsers();
+  renderLimits();
+  alert(t('userAddedMsg'));
+}
+
+/* ==================== VAULT PAGES (Turnitin / iAuthenticate / Stealth Writer) ==================== */
+const VAULTS = { turnitin: [], ithenticate: [], stealthwriter: [] };
+const VAULT_PAGE_SIZE = 16;
+const vaultSearchTerm = { turnitin: '', ithenticate: '', stealthwriter: '' };
+const vaultPageIndex = { turnitin: 0, ithenticate: 0, stealthwriter: 0 };
+let vaultEditTarget = null; 
+let vaultIdCounter = 1;
+
+function generateDefaultAccounts() {
+  // 50 Turnitin Accounts
+  for(let i = 1; i <= 50; i++) {
+    VAULTS.turnitin.push({
+      id: vaultIdCounter++,
+      name: `Turnitin Premium ${i}`,
+      email: `turnitin.user${i}@nexlicense.io`,
+      pass: `TrnTn_Secure2026_${100 + i}`,
+      notes: `Default dynamic channel account #${i}`
+    });
+  }
+  // 50 iAuthenticate Accounts
+  for(let i = 1; i <= 50; i++) {
+    VAULTS.ithenticate.push({
+      id: vaultIdCounter++,
+      name: `iAuthenticate Elite ${i}`,
+      email: `ith.auth${i}@nexlicense.io`,
+      pass: `iThntkt_Pass!${200 + i}`,
+      notes: `Default shared corporate seed node #${i}`
+    });
+  }
+  // 50 Stealth Writer Accounts
+  for(let i = 1; i <= 50; i++) {
+    VAULTS.stealthwriter.push({
+      id: vaultIdCounter++,
+      name: `Stealth Writer Pro ${i}`,
+      email: `stealth.write${i}@nexlicense.io`,
+      pass: `StlthWrt_Crypt_${300 + i}`,
+      notes: `Default bypass system identity #${i}`
+    });
+  }
+}
+
+function getFilteredVaultEntries(page){
+  const q = (vaultSearchTerm[page] || '').toLowerCase();
+  if(!q) return VAULTS[page];
+  return VAULTS[page].filter(e =>
+    e.name.toLowerCase().includes(q) || (e.email || '').toLowerCase().includes(q)
+  );
+}
+
+function onVaultSearch(page){
+  vaultSearchTerm[page] = document.getElementById('vaultSearch-' + page).value;
+  vaultPageIndex[page] = 0;
+  renderVaultPage(page);
+}
+
+function vaultGoToPage(page, newIndex){
+  vaultPageIndex[page] = newIndex;
+  renderVaultPage(page);
+}
+
+function renderVaultPage(page){
+  const grid = document.getElementById('vaultGrid-' + page);
+  if(!grid) return;
+  const filtered = getFilteredVaultEntries(page);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / VAULT_PAGE_SIZE));
+  if(vaultPageIndex[page] >= totalPages) vaultPageIndex[page] = totalPages - 1;
+  if(vaultPageIndex[page] < 0) vaultPageIndex[page] = 0;
+  const start = vaultPageIndex[page] * VAULT_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + VAULT_PAGE_SIZE);
+
+  const countEl = document.getElementById('vaultCount-' + page);
+  if(countEl){
+    const totalAll = VAULTS[page].length;
+    countEl.textContent = vaultSearchTerm[page]
+      ? `${filtered.length} ${currentLang==='zh'?'条匹配结果，共':'matching of'} ${totalAll}`
+      : `${totalAll} ${currentLang==='zh'?'条凭证':'credentials stored'}`;
+  }
+
+  grid.innerHTML = pageItems.map(entry => {
+    const maskedPass = '•'.repeat(Math.min(entry.pass.length, 12)) || '••••••••';
+    return `
+      <div class="vault-card">
+        <div class="vault-card-name">${escapeHtml(entry.name)}</div>
+        <div class="vault-card-field"><i data-lucide="users"></i> <span>${escapeHtml(entry.email) || '—'}</span></div>
+        <div class="vault-card-field">
+          <i data-lucide="key-round"></i>
+          <span class="vault-pass-value" id="vaultPassDisplay-${entry.id}">${maskedPass}</span>
+          <button class="vault-eye" onclick="toggleCardPassword('${page}', ${entry.id})" title="${t('vaultShow')}/${t('vaultHide')}">
+            <i data-lucide="eye" id="vaultEyeIcon-${entry.id}" style="width:14px;height:14px;"></i>
+          </button>
+        </div>
+        ${entry.notes ? `<div class="vault-notes">${escapeHtml(entry.notes)}</div>` : ''}
+        <div class="vault-card-actions">
+          <button class="btn-ghost btn-small" onclick="openVaultModal('${page}', ${entry.id})">${t('vaultEditBtn')}</button>
+          <button class="btn-danger" onclick="deleteVaultEntry('${page}', ${entry.id})">${t('vaultDeleteBtn')}</button>
+        </div>
+      </div>`;
+  }).join('') || `<div class="vault-card empty" onclick="openVaultModal('${page}', null)"><i data-lucide="plus"></i><span>${t('vaultAddCard')}</span></div>`;
+
+  const pagerEl = document.getElementById('vaultPagination-' + page);
+  if(pagerEl){
+    if(filtered.length <= VAULT_PAGE_SIZE){
+      pagerEl.innerHTML = '';
+    } else {
+      pagerEl.innerHTML = `
+        <button ${vaultPageIndex[page]===0?'disabled':''} onclick="vaultGoToPage('${page}', ${vaultPageIndex[page]-1})">${currentLang==='zh'?'上一页':'Prev'}</button>
+        <span>${currentLang==='zh'?'第':'Page'} ${vaultPageIndex[page]+1} / ${totalPages}</span>
+        <button ${vaultPageIndex[page]>=totalPages-1?'disabled':''} onclick="vaultGoToPage('${page}', ${vaultPageIndex[page]+1})">${currentLang==='zh'?'下一页':'Next'}</button>
+      `;
+    }
+  }
+  safeCreateIcons();
+}
+
+function escapeHtml(str){
+  if(!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function toggleCardPassword(page, id){
+  const entry = VAULTS[page].find(e => e.id === id);
+  if(!entry) return;
+  const el = document.getElementById(`vaultPassDisplay-${id}`);
+  const iconEl = document.getElementById(`vaultEyeIcon-${id}`);
+  if(!el) return;
+  const isMasked = el.dataset.revealed !== 'true';
+  el.textContent = isMasked ? entry.pass : ('•'.repeat(Math.min(entry.pass.length, 12)) || '••••••••');
+  el.dataset.revealed = isMasked ? 'true' : 'false';
+  if(iconEl){
+    iconEl.setAttribute('data-lucide', isMasked ? 'eye-off' : 'eye');
+    safeCreateIcons();
+  }
+}
+
+function openVaultModal(page, id){
+  vaultEditTarget = { page, id };
+  const entry = id !== null ? VAULTS[page].find(e => e.id === id) : null;
+  document.getElementById('vName').value = entry ? entry.name : '';
+  document.getElementById('vEmail').value = entry ? entry.email : '';
+  document.getElementById('vPass').value = entry ? entry.pass : '';
+  document.getElementById('vNotes').value = entry ? (entry.notes || '') : '';
+  document.getElementById('vPass').type = 'password';
+  const iconEl = document.getElementById('vaultModalEyeIcon');
+  if(iconEl){ iconEl.setAttribute('data-lucide', 'eye'); safeCreateIcons(); }
+  document.getElementById('vaultModal').classList.add('show');
+}
+
+function closeVaultModal(){
+  document.getElementById('vaultModal').classList.remove('show');
+  vaultEditTarget = null;
+}
+
+function toggleVaultModalPass(){
+  const input = document.getElementById('vPass');
+  const iconEl = document.getElementById('vaultModalEyeIcon');
+  const showing = input.type === 'password';
+  input.type = showing ? 'text' : 'password';
+  if(iconEl){
+    iconEl.setAttribute('data-lucide', showing ? 'eye-off' : 'eye');
+    safeCreateIcons();
+  }
+}
+
+function saveVaultEntry(){
+  if(!vaultEditTarget) return;
+  const name = document.getElementById('vName').value.trim();
+  if(!name){ alert(t('vaultFillRequired')); return; }
+  const { page, id } = vaultEditTarget;
+  const data = {
+    name,
+    email: document.getElementById('vEmail').value.trim(),
+    pass: document.getElementById('vPass').value,
+    notes: document.getElementById('vNotes').value.trim(),
+  };
+  if(id !== null){
+    const existing = VAULTS[page].find(e => e.id === id);
+    if(existing) Object.assign(existing, data);
+  } else {
+    VAULTS[page].push({ id: vaultIdCounter++, ...data });
+  }
+  closeVaultModal();
+  renderVaultPage(page);
+}
+
+function deleteVaultEntry(page, id){
+  if(!confirm(t('vaultConfirmDelete'))) return;
+  VAULTS[page] = VAULTS[page].filter(e => e.id !== id);
+  renderVaultPage(page);
+}
+
+function exportVault(page){
+  const dataStr = JSON.stringify(VAULTS[page], null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `NexLicense_Vault_${page.toUpperCase()}_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function triggerVaultImport(page){
+  document.getElementById('vaultImportInput-' + page).click();
+}
+
+function importVault(page, inputEl){
+  const file = inputEl.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if(!Array.isArray(parsed)) throw new Error('Invalid file');
+      const cleaned = parsed
+        .filter(item => item && typeof item.name === 'string')
+        .map(item => ({
+          id: vaultIdCounter++,
+          name: item.name,
+          email: item.email || '',
+          pass: item.pass || '',
+          notes: item.notes || '',
+        }));
+      VAULTS[page] = VAULTS[page].concat(cleaned);
+      vaultPageIndex[page] = 0;
+      renderVaultPage(page);
+      alert(`${cleaned.length} ${currentLang==='zh'?'条凭证已导入。':'credentials imported.'}`);
+    } catch(err){
+      alert(currentLang==='zh' ? '导入失败：文件格式无效。' : 'Import failed: invalid file format.');
+    }
+    inputEl.value = '';
+  };
+  reader.readAsText(file);
+}
+
+/* ==================== CHARTS ==================== */
+function instantiateCharts(){
+  if(typeof Chart === 'undefined') return;
+  Chart.defaults.color = '#9ca3af';
+  Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+  const ctx = document.getElementById('dashMainChart');
+  if(!ctx) return;
+  if(charts.dashMain) charts.dashMain.destroy();
+  charts.dashMain = new Chart(ctx.getContext('2d'), {
+    type:'line',
+    data:{
+      labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets:[{ label: currentLang==='zh'?'每日操作量':'Daily Actions', data:[120,180,150,210,260,190,240], borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,.08)', fill:true, tension:.35, borderWidth:2 }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+  });
+}
+
+/* ==================== INIT ==================== */
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  const k = e.key ? e.key.toLowerCase() : '';
+  const blockCombo =
+    k === 'f12' ||
+    (e.ctrlKey && e.shiftKey && (k === 'i' || k === 'j' || k === 'c')) ||
+    (e.metaKey && e.altKey && (k === 'i' || k === 'j' || k === 'c')) ||
+    (e.ctrlKey && k === 'u') ||
+    (e.metaKey && e.altKey && k === 'u') ||
+    (e.ctrlKey && k === 's') ||
+    (e.metaKey && k === 's');
+  if(blockCombo){ e.preventDefault(); e.stopPropagation(); return false; }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  generateDefaultAccounts();
+  safeCreateIcons();
+  setLang('en');
+});
+</script>
+</body>
+</html>
